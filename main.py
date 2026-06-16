@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,10 +17,20 @@ from routes.contacts import router as contacts_router
 from routes.auth import router as auth_router
 from routes.users import router as users_router
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    yield
+
+
 app = FastAPI(
-    title="Contacts API"
+    title="Contacts API",
+    version="1.0.0",
+    lifespan=lifespan
 )
 
+# Rate Limiter
 limiter = Limiter(
     key_func=get_remote_address
 )
@@ -34,8 +46,7 @@ app.add_middleware(
     SlowAPIMiddleware
 )
 
-Base.metadata.create_all(bind=engine)
-
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,6 +55,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Routers
 app.include_router(auth_router)
 app.include_router(contacts_router)
 app.include_router(users_router)
