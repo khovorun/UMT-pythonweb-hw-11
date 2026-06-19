@@ -8,3 +8,4 @@ bcrypt
 email-validator
 python-multipart
 slowapi
+cloudinary
